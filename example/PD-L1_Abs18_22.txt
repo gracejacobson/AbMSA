@@ -1,0 +1,127 @@
+# Input sequence
+# ANARCI numbered
+# Domain 1 of 1
+# Most significant HMM hit
+#|species|chain_type|e-value|score|seqstart_index|seqend_index|
+#|human|H|7.1e-54|172.5|0|118|
+# Scheme = kabat
+H 1       Q
+H 2       V
+H 3       Q
+H 4       L
+H 5       Q
+H 6       E
+H 7       S
+H 8       G
+H 9       P
+H 10      G
+H 11      L
+H 12      V
+H 13      K
+H 14      P
+H 15      S
+H 16      Q
+H 17      T
+H 18      L
+H 19      S
+H 20      L
+H 21      T
+H 22      C
+H 23      T
+H 24      V
+H 25      S
+H 26      G
+H 27      G
+H 28      S
+H 29      I
+H 30      T
+H 31      S
+H 32      D
+H 33      Y
+H 34      W
+H 35      N
+H 36      W
+H 37      I
+H 38      R
+H 39      Q
+H 40      H
+H 41      P
+H 42      G
+H 43      N
+H 44      K
+H 45      L
+H 46      E
+H 47      Y
+H 48      M
+H 49      G
+H 50      Y
+H 51      I
+H 52      S
+H 53      Y
+H 54      T
+H 55      G
+H 56      S
+H 57      T
+H 58      Y
+H 59      Y
+H 60      N
+H 61      P
+H 62      S
+H 63      L
+H 64      K
+H 65      S
+H 66      R
+H 67      I
+H 68      S
+H 69      I
+H 70      T
+H 71      R
+H 72      D
+H 73      T
+H 74      S
+H 75      K
+H 76      N
+H 77      Q
+H 78      F
+H 79      S
+H 80      L
+H 81      K
+H 82      L
+H 82    A S
+H 82    B S
+H 82    C V
+H 83      T
+H 84      T
+H 85      A
+H 86      D
+H 87      T
+H 88      A
+H 89      V
+H 90      Y
+H 91      Y
+H 92      C
+H 93      A
+H 94      R
+H 95      Y
+H 96      R
+H 97      D
+H 98      W
+H 99      D
+H 100     V
+H 100   A R
+H 100   B A
+H 100   C M
+H 101     D
+H 102     Y
+H 103     W
+H 104     G
+H 105     Q
+H 106     G
+H 107     T
+H 108     T
+H 109     V
+H 110     T
+H 111     V
+H 112     S
+H 113     S
+//
