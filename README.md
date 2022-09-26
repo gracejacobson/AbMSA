@@ -1,5 +1,6 @@
 # AbMSA
-This is a multi-sequence alignment viewer for antibody chains. Check out the HTML for the example Jupyter Notebook [here](http://htmlpreview.github.io/?https://github.com/gracejacobson/AbMSA/blob/main/PD-L1%20example.html), and the example output [here](http://htmlpreview.github.io/?https://github.com/gracejacobson/AbMSA/blob/main/example/Example%20PD-L1%20Antibody%20Alignment.html). 
+This is a multi-sequence alignment viewer for antibody chains. Check out the Jupyter Notebook example using patented PD-L1 heavy chains!
+![Example Alignment](/example/Example_Alignment.png)
 
 **Note: Requires ANARCI**. ANARCI is used to number amino acids (with Kabat) and get CDR definitions. 
 
