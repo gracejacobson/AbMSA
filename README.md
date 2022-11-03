@@ -1,23 +1,20 @@
 # AbMSA
+
+**REQUIRES CLUSTALO**
+
+**Python libraries**: anarci, bokeh, biopython, panel, pandas.
+
 This is a multi-sequence alignment viewer for antibody chains. Check out the Jupyter Notebook example using patented PD-L1 heavy chains!
+
 ![Example Alignment](/example/Example_Alignment.png)
 
-**Note: Requires ANARCI**. ANARCI is used to number amino acids (with Kabat) and get CDR definitions. 
+***
 
 This MSA viewer was based on code by [Damien Farrell](https://github.com/dmnfarrell) at UC Davis from [this](https://dmnfarrell.github.io/bioinformatics/bokeh-sequence-aligner) article. 
 
-Each alignment requires a fasta file, and generates an interactive Bokeh figure. Along the way, an alignment file and .txt file is generated. A .txt file is overwritten with each chain.
+Each alignment requires a fasta file, and generates an interactive Bokeh figure. Along the way, an alignment file  is created using the BioPython clustalo wrapper.
 
-Use the following schemes when inputting CDR definitions for getAbMSA(infile, scheme): 
-
-Heavy Chain:
-- "k_H": Kabat 
-- "c_H": Chothia 
-- "m_H": Martin 
-- "i_H": IMGT 
-
-Light Chain:
-- "k_LK": Kabat
-- "c_LK": Chothia
-- "m_LK": Martin
-- "i_LK": IMGT
+Default Ab numbering is Kabat. You can specify what numbering scheme and what CDR definition to use: 
+- "k": Kabat 
+- "i": IMGT 
+- "c": Chothia 
