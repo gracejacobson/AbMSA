@@ -19,18 +19,16 @@ def getAbMSA(infile, scheme):
     #get alignment
     alnfile = getAln(infile)
     aln = AlignIO.read(alnfile, 'fasta')
-
     #get Ab kabat numbering
     kabatdict, idxs_dict = getNumsCdrs(infile, scheme)
     idxs_dict = correctCDRs(idxs_dict, aln)
 
-    aln.sort(reverse=True)
 
     p = view_alignment(aln, idxs_dict, kabatdict)
     return p
 
 ########################################################
-# Alignment & CDR Helper Functions
+# Alignment & CDR Functions
 ########################################################
 
 def getNumsCdrs(infile, scheme):
@@ -43,7 +41,7 @@ def getNumsCdrs(infile, scheme):
 
     for record in records:
         seq = str(record.seq)
-        kabatdf = getNums(seq, outfile)
+        kabatdf = getNumsKabat(seq)
         CDRs_idx = defCDRs(scheme, kabatdf)
         kabatdict[str(record.id)] = [i for i in kabatdf['KabatNum']]
         idxs_dict[str(record.id)] = CDRs_idx
@@ -112,7 +110,17 @@ def getKabat(kabatdict, aln):
                 kabatnums.append('N/A')
                 count +=1
             else:
-                kabatnums.append(kabatdict[a.id][idx-count])
+                if (idx ==0) and (count==0):
+                    kabatnums.append(kabatdict[a.id][idx])
+                else:
+                    if (idx-count) == len(kabatdict[a.id]):
+                        kabatnums.append('')
+                    else:
+                        if(idx-count)>len(kabatdict[a.id]):
+                            kabatnums.append('')
+                        else:
+                            kabatnums.append(kabatdict[a.id][idx-count])
+
     return kabatnums
 
 def getCDR(aln, idxs_dict):
@@ -156,7 +164,6 @@ def getRegion(idxs_dict, aln):
         id = str(rec.id)
         if idxs_dict[id]:
             for i in range(0, len(a)):
-
                 if i< idxs_dict[id][0]:
                     region.append("FWR1")
                 if i>= idxs_dict[id][0] and i<idxs_dict[id][1]:
