@@ -7,49 +7,54 @@
 import os
 import pandas as pd
 import re
-                          #CDR1  #FW2   #CDR2  #FW3   #CDR3  #FW4
+from anarci import number
+                      #CDR1  #FW2   #CDR2  #FW3   #CDR3  #FW4
 CDR_idx = { "k_H":   ["31",  "36",  "50",  "66",  "95",  "103",  "113"],
-            "c_H":   ["26",  "",    "52",  "57",  "96",  "102",  "113"],
-            "m_H":   ["30",  "36",  "47",  "59",  "93",  "102",  "113"],
-            "i_H":   ["26",  "36",  "50",  "57",  "93",  "103",  "113"],
+            "c_H":   ["26",  "",    "52",  "57",  "95",  "103",  "113"],
+            "i_H":   ["26",  "34",  "51",  "58",  "93",  "103",  "113"],
+            "hum_H": ["26",  "36",  "50",  "66",  "93",  "103",  "113"],
 
                         #CDR1   #FW2   #CDR2  #FW3   #CDR3  #FW4
-            "k_LK":   ["24",  "35",  "50",  "57",  "89",  "98",  "109"],
-            "c_LK":   ["26",  "33",  "50",  "53",  "91",  "97",  "109"],
-            "m_LK":   ["30",  "37",  "47",  "56",  "89",  "97",  "109"],
-            "i_LK":   ["27",  "33",  "50",  "52",  "89",  "98",  "109"]}
+            "k_L":   ["24",  "35",  "50",  "57",  "89",  "98",  "109"],
+            "c_L":   ["24",  "35",  "50",  "57",  "89",  "98",  "109"],
+            "i_L":   ["27",  "33",  "50",  "53",  "89",  "98",  "109"],
+            "hum_L": ["24",  "35",  "50",  "57",  "89",  "98",  "109"]}
 
-def getNums(aaseq, outfile):
+def getNumsKabat(aaseq):
     """Get Kabat numbering and Ab sequence from ANARCI"""
 
-    #calling anarci
-    os.system('ANARCI -i ' + aaseq + ' -s k -o ' + outfile + '.txt')
-    
-    #formatting raw df
-    rawdf = pd.read_csv(outfile + '.txt', comment='#', header=None)
-    rawdf.drop(rawdf.tail(1).index, inplace=True)
+    numbering, chain_type = number(aaseq, scheme="kabat")
+    data = []
 
-    data =[]
-    for index, row in rawdf.iterrows():
+    for i in numbering:
+        nums = str(i[0][0])+ i[0][1]
+        nums = nums.replace(" ", "")
+        data.append([chain_type, str(nums), i[1]])
 
-        # chain, kabat num, and aa
-        kabatList = re.findall(r"([HKL])\s(\d*)\s*([A-Z]?)\s*([A-Z-])",rawdf.at[index, rawdf.columns[0]] )
-        
-        if kabatList:
-            if len(kabatList[0]) ==4:
-                                #chain             #kabat num                              #amino acid
-                data.append([kabatList[0][0], str(kabatList[0][1] + kabatList[0][2]), kabatList[0][3]])
+    kabatdf = pd.DataFrame(data, columns = ["Chain", "KabatNum", "AA"])
 
-            else:
-                pass
+    return kabatdf
 
-    #formatting df
+def getNumsIMGT(aaseq):
+    """Get Kabat numbering and Ab sequence from ANARCI"""
+
+    numbering, chain_type = number(aaseq, scheme="imgt")
+
+    data = []
+
+    for i in numbering:
+        nums = str(i[0][0])+ i[0][1]
+        nums = nums.replace(" ", "")
+        data.append([chain_type, str(nums), i[1]])
+
     kabatdf = pd.DataFrame(data, columns = ["Chain", "KabatNum", "AA"])
 
     return kabatdf
 
 def defCDRs(scheme, kabatdf):
     """Find CDR indices"""
+
+    scheme = scheme + "_" + kabatdf["Chain"][0] 
 
     #chothia weirdness
     if scheme == 'c_H':
@@ -76,5 +81,21 @@ def defCDRs(scheme, kabatdf):
         kabat_num = row[kabatdf.columns[1]]
         if kabat_num in CDR_idx[scheme]:
             CDRs_idx.append(index)
+
+    count=0
+
+    if len(CDRs_idx) == 5:
+        last_idx = int(CDR_idx[scheme][5])
+        for index,row  in kabatdf.iterrows():
+            try:
+                thisnum = int(row['KabatNum'])
+                
+            except:
+                thisnum=0
+
+            if thisnum > last_idx:
+                if count == 0:
+                    CDRs_idx.append(index)
+                count+=1
 
     return CDRs_idx
