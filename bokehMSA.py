@@ -5,6 +5,7 @@
 """Builds Bokeh plot for interactive antibody multisequence alignments"""
 
 import numpy as np
+import re 
 from Bio.Align import AlignInfo
 from Bio.Align.Applications import ClustalOmegaCommandline
 from Bio import AlignIO, SeqIO
@@ -13,40 +14,52 @@ from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.models.glyphs import Text, Rect
 from AbNum import *
 
-def getAbMSA(infile, scheme):
+numbering = ""
+
+def getAbMSA(infile, CDRdef="i", numbering="k"):
     """Main function for building plot"""
 
     #get alignment
     alnfile = getAln(infile)
     aln = AlignIO.read(alnfile, 'fasta')
-    #get Ab kabat numbering
-    kabatdict, idxs_dict = getNumsCdrs(infile, scheme)
+    aln = aln[::-1]
+    
+    #get Ab numbering
+    numdict, idxs_dict = getNumsCdrs(infile, CDRdef, numbering)
     idxs_dict = correctCDRs(idxs_dict, aln)
 
+    p = view_alignment(aln, idxs_dict, numdict, numbering)
 
-    p = view_alignment(aln, idxs_dict, kabatdict)
     return p
 
 ########################################################
 # Alignment & CDR Functions
 ########################################################
 
-def getNumsCdrs(infile, scheme):
-    "Gets kabat numbers for alignment"
+def getNumsCdrs(infile, scheme, numbering):
+    "Gets  numbers for alignment"
     idxs_dict = {}
-    kabatdict = {}
+    numdict = {}
 
     records = SeqIO.parse(infile, 'fasta')
-    outfile = infile.replace(".fasta", "")
 
     for record in records:
         seq = str(record.seq)
-        kabatdf = getNumsKabat(seq)
-        CDRs_idx = defCDRs(scheme, kabatdf)
-        kabatdict[str(record.id)] = [i for i in kabatdf['KabatNum']]
+
+        if numbering == "k":
+            df = getNumsKabat(seq)
+        if numbering == "i":
+            df = getNumsIMGT(seq)
+            for index, row in df.iterrows():
+                if row['AA'] == '-':
+                    df = df.drop(index)
+            df = df.reset_index(drop=True)
+
+        CDRs_idx = defCDRs(scheme, df, numbering)
+        numdict[str(record.id)] = [i for i in df['Num']]
         idxs_dict[str(record.id)] = CDRs_idx
 
-    return kabatdict, idxs_dict
+    return numdict, idxs_dict
 
 def correctCDRs(idxs_dict, aln):
     """Defines CDR indices in alignment sequences"""
@@ -99,29 +112,29 @@ def get_colors(seqs, consensus_seq):
 
     return colors
 
-def getKabat(kabatdict, aln):
-    """Array of kabat number for hover tool"""
-    kabatnums = []
+def getNumsArray(numsdict, aln):
+    """Array of numbers for hover tool"""
+    nums = []
 
     for a in aln:
         count=0
         for idx in range(0, len(a.seq)):
             if a.seq[idx] == '-':
-                kabatnums.append('N/A')
+                nums.append('N/A')
                 count +=1
             else:
                 if (idx ==0) and (count==0):
-                    kabatnums.append(kabatdict[a.id][idx])
+                    nums.append(numsdict[a.id][idx])
                 else:
-                    if (idx-count) == len(kabatdict[a.id]):
-                        kabatnums.append('')
+                    if (idx-count) == len(numsdict[a.id]):
+                        nums.append('')
                     else:
-                        if(idx-count)>len(kabatdict[a.id]):
-                            kabatnums.append('')
+                        if(idx-count)>len(numsdict[a.id]):
+                            nums.append('')
                         else:
-                            kabatnums.append(kabatdict[a.id][idx-count])
+                            nums.append(numsdict[a.id][idx-count])
 
-    return kabatnums
+    return nums
 
 def getCDR(aln, idxs_dict):
     """Array of Ab regions for hover tool"""
@@ -184,7 +197,7 @@ def getRegion(idxs_dict, aln):
 # Bokeh Sequence Alignment View
 ########################################################
 
-def view_alignment(aln,  idxs_dict, kabatdict, fontsize="9pt", plot_width=1300):
+def view_alignment(aln, idxs_dict, numsdict, numbering, fontsize="9pt", plot_width=1300):
     """Builds MSA in Bokeh Plots"""
 
     #cutoffs for showing conservation
@@ -199,7 +212,7 @@ def view_alignment(aln,  idxs_dict, kabatdict, fontsize="9pt", plot_width=1300):
     S = len(seqs)    
 
     #arrays for tool tips
-    kabatnums = getKabat(kabatdict, aln) #kabat number for each AA
+    nums = getNumsArray(numsdict, aln) #number for each AA
     colors = get_colors(seqs, consensus_seq) #color with >50% conservation
     region = getRegion(idxs_dict, aln) # CDR or FWR region
     aminoacid =  [z for rec in aln for z in list(range(0,len(rec.seq)))] # AA
@@ -223,13 +236,19 @@ def view_alignment(aln,  idxs_dict, kabatdict, fontsize="9pt", plot_width=1300):
 
     #now we can create the ColumnDataSource with all the arrays
     source = ColumnDataSource(dict(x=gx, y=gy, recty=recty, text=text, colors=colors, 
-        aminoacid=aminoacid, kabatnums = kabatnums, name=name, region = region))
+        aminoacid=aminoacid, nums = nums, name=name, region = region))
     plot_height = len(seqs)*15+125
 
     #view_range is for the close up view
     view_range = (0,130)
     tools="xpan, xwheel_zoom, save, reset"
-    TOOLTIPS = [("ID","@name"),("AA", "@text"), ("Kabat Number","@kabatnums"), ('Region', '@region')]
+
+    if numbering == "k":
+        numLabel = "Kabat Number"
+    if numbering == "i":
+        numLabel = "IMGT Number"
+
+    TOOLTIPS = [("ID","@name"),("AA", "@text"), (numLabel,"@nums"), ('Region', '@region')]
 
     #sequence text view with ability to scroll along x axis
     p1 = figure(plot_width=plot_width, plot_height=plot_height,
@@ -241,6 +260,7 @@ def view_alignment(aln,  idxs_dict, kabatdict, fontsize="9pt", plot_width=1300):
                 text_font_size=fontsize)
     rects = Rect(x="x", y="recty",  width=1, height=1, fill_color="colors",
                 line_color=None, fill_alpha=0.4)
+
     rectCDR = Rect(x="cdrx", y="cdry", width="cdrw", height=1, fill_color=None, line_color ='red',
             fill_alpha=0, line_width=1.5)
     
